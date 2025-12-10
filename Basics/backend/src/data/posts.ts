@@ -23,4 +23,4 @@ export const posts = [
     content: 'A guide to setting up Apollo Server for your GraphQL API.',
     authorId: '2',
   },
-] as const;
+];

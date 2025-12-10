@@ -13,4 +13,10 @@ export const postTypeDefs = gql`
     postById(id: ID!): Post
     postAuthor(id: ID!): User
   }
+
+  type Mutation {
+    createPost(title: String!, content: String!, authorId: ID!): Post!
+    deletePost(id: ID!): Boolean!
+    updatePost(id: ID!, title: String, content: String): Post!
+  }
 `;
