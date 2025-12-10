@@ -5,6 +5,7 @@ export const userTypeDefs = gql`
     id: ID!
     name: String!
     email: String!
+    posts: [Post!]!
   }
 
   type Query {
