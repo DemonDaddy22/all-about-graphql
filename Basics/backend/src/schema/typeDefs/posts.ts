@@ -5,13 +5,12 @@ export const postTypeDefs = gql`
     id: ID!
     title: String!
     content: String!
-    authorId: ID!
+    author: User!
   }
 
   type Query {
     posts: [Post!]!
     postById(id: ID!): Post
-    postAuthor(id: ID!): User
   }
 
   type Mutation {

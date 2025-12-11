@@ -7,17 +7,19 @@ export const postResolvers = {
     posts: async (_: any, __: any, context: Context) => {
       const { db } = context;
       const postsCollection = db.collection('posts');
+      const usersCollection = db.collection('users');
       const posts = await postsCollection.find().toArray();
-      return posts.map(post => ({
+      return posts.map(async post => ({
         id: post.id,
         title: post.title,
         content: post.content,
-        authorId: post.authorId,
+        author: await usersCollection.findOne({ id: post.authorId }),
       }));
     },
     postById: async (_: any, args: { id: string }, context: Context) => {
       const { db } = context;
       const postsCollection = db.collection('posts');
+      const usersCollection = db.collection('users');
       const post = await postsCollection.findOne({ id: args.id });
       return !post
         ? null
@@ -25,26 +27,8 @@ export const postResolvers = {
             id: post.id,
             title: post.title,
             content: post.content,
-            authorId: post.authorId,
+            author: await usersCollection.findOne({ id: post.authorId }),
           };
-    },
-    postAuthor: async (_: any, args: { id: string }, context: Context) => {
-      const { db } = context;
-      const postsCollection = db.collection('posts');
-      const post = await postsCollection.findOne({ id: args.id });
-      if (!post) {
-        return null;
-      }
-      const usersCollection = db.collection('users');
-      const user = await usersCollection.findOne({ id: post.authorId });
-      return user
-        ? {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            posts: user.posts || [],
-          }
-        : null;
     },
   },
   Mutation: {

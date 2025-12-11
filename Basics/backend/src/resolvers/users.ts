@@ -6,17 +6,19 @@ export const userResolvers = {
     users: async (_: any, __: any, context: Context) => {
       const { db } = context;
       const usersCollection = db.collection('users');
+      const postsCollection = db.collection('posts');
       const users = await usersCollection.find().toArray();
-      return users.map(user => ({
+      return users.map(async user => ({
         id: user.id,
         name: user.name,
         email: user.email,
-        posts: user.posts || [],
+        posts: await postsCollection.find({ id: { $in: user.posts || [] } }).toArray(),
       }));
     },
     userById: async (_: any, args: { id: string }, context: Context) => {
       const { db } = context;
       const usersCollection = db.collection('users');
+      const postsCollection = db.collection('posts');
       const user = await usersCollection.findOne({ id: args.id });
       return !user
         ? null
@@ -24,7 +26,7 @@ export const userResolvers = {
             id: user.id,
             name: user.name,
             email: user.email,
-            posts: user.posts || [],
+            posts: await postsCollection.find({ id: { $in: user.posts || [] } }).toArray(),
           };
     },
   },
