@@ -1,4 +1,3 @@
-import { users } from '../data/users';
 import { Context } from '../types/resolvers';
 
 export const userResolvers = {
@@ -31,36 +30,49 @@ export const userResolvers = {
     },
   },
   Mutation: {
-    createUser: (_: any, args: { name: string; email: string }) => {
+    createUser: async (_: any, args: { name: string; email: string }, context: Context) => {
+      const { db } = context;
+      const usersCollection = db.collection('users');
       const newUser = {
         id: Date.now().toString(),
         name: args.name,
         email: args.email,
         posts: [],
       };
-      users.push(newUser);
-      return newUser;
+      const result = await usersCollection.insertOne(newUser);
+      const user = await usersCollection.findOne({ _id: result.insertedId });
+      return {
+        id: user!.id,
+        name: user!.name,
+        email: user!.email,
+        posts: user!.posts || [],
+      };
     },
-    deleteUser: (_: any, args: { id: string }) => {
-      const userIndex = users.findIndex(user => user.id === args.id);
-      if (userIndex === -1) {
-        return false;
-      }
-      users.splice(userIndex, 1);
-      return true;
+    deleteUser: async (_: any, args: { id: string }, context: Context) => {
+      const { db } = context;
+      const usersCollection = db.collection('users');
+      const result = await usersCollection.deleteOne({ id: args.id });
+      return result.deletedCount === 1;
     },
-    updateUser: (_: any, args: { id: string; name?: string; email?: string }) => {
-      const user = users.find(user => user.id === args.id);
+    updateUser: async (_: any, args: { id: string; name?: string; email?: string }, context: Context) => {
+      const { db } = context;
+      const usersCollection = db.collection('users');
+      const user = await usersCollection.findOne({ id: args.id });
       if (!user) {
         throw new Error('User not found');
       }
-      if (args.name !== undefined) {
-        user.name = args.name;
-      }
-      if (args.email !== undefined) {
-        user.email = args.email;
-      }
-      return user;
+      const updatedUser = {
+        ...(user as unknown as User),
+        name: args.name !== undefined ? args.name : user.name,
+        email: args.email !== undefined ? args.email : user.email,
+      };
+      await usersCollection.updateOne({ id: args.id }, { $set: updatedUser });
+      return {
+        id: updatedUser.id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        posts: updatedUser.posts || [],
+      };
     },
   },
 };
