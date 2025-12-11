@@ -1,18 +1,50 @@
 import { posts } from '../data/posts';
 import { users } from '../data/users';
+import { Context } from '../types/resolvers';
 
 export const postResolvers = {
   Query: {
-    posts: () => posts,
-    postById: (_: any, args: { id: string }) => {
-      return posts.find(post => post.id === args.id);
+    posts: async (_: any, __: any, context: Context) => {
+      const { db } = context;
+      const postsCollection = db.collection('posts');
+      const posts = await postsCollection.find().toArray();
+      return posts.map(post => ({
+        id: post.id,
+        title: post.title,
+        content: post.content,
+        authorId: post.authorId,
+      }));
     },
-    postAuthor: (_: any, args: { id: string }) => {
-      const post = posts.find(post => post.id === args.id);
+    postById: async (_: any, args: { id: string }, context: Context) => {
+      const { db } = context;
+      const postsCollection = db.collection('posts');
+      const post = await postsCollection.findOne({ id: args.id });
+      return !post
+        ? null
+        : {
+            id: post.id,
+            title: post.title,
+            content: post.content,
+            authorId: post.authorId,
+          };
+    },
+    postAuthor: async (_: any, args: { id: string }, context: Context) => {
+      const { db } = context;
+      const postsCollection = db.collection('posts');
+      const post = await postsCollection.findOne({ id: args.id });
       if (!post) {
         return null;
       }
-      return users.find(user => user.id === post.authorId);
+      const usersCollection = db.collection('users');
+      const user = await usersCollection.findOne({ id: post.authorId });
+      return user
+        ? {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            posts: user.posts || [],
+          }
+        : null;
     },
   },
   Mutation: {

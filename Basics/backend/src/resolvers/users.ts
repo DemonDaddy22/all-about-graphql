@@ -1,10 +1,31 @@
 import { users } from '../data/users';
+import { Context } from '../types/resolvers';
 
 export const userResolvers = {
   Query: {
-    users: () => users,
-    userById: (_: any, args: { id: string }) => {
-      return users.find(user => user.id === args.id);
+    users: async (_: any, __: any, context: Context) => {
+      const { db } = context;
+      const usersCollection = db.collection('users');
+      const users = await usersCollection.find().toArray();
+      return users.map(user => ({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        posts: user.posts || [],
+      }));
+    },
+    userById: async (_: any, args: { id: string }, context: Context) => {
+      const { db } = context;
+      const usersCollection = db.collection('users');
+      const user = await usersCollection.findOne({ id: args.id });
+      return !user
+        ? null
+        : {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            posts: user.posts || [],
+          };
     },
   },
   Mutation: {
