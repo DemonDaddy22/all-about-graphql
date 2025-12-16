@@ -8,6 +8,10 @@ export const dogTypeDefs = gql`
   }
 
   type Query {
-    getDogs: [Dog!]!
+    dogs: [Dog!]!
+  }
+
+  type Mutation {
+    addDog(name: String!, breed: String!): Dog!
   }
 `;
