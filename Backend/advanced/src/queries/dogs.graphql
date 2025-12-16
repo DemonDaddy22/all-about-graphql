@@ -1,0 +1,7 @@
+query Dogs($showBreed: Boolean! = true) {
+  getDogs {
+    id @skip(if: $showBreed)
+    name
+    breed @include(if: $showBreed)
+  }
+}
